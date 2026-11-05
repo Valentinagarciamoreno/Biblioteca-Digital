@@ -1,0 +1,56 @@
+<!--
+  Inicio.html — pantalla de bienvenida.
+  Muestra el encabezado con el buscador, un filtro por autor, la
+  cuadrícula de libros de ejemplo (cada portada lleva al Lector de ese
+  libro, y tiene su corazón de favorito), y el pie de página.
+  No necesita haber iniciado sesión para verla.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <!-- Trae los colores y estilos compartidos de Stylesheet.html -->
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <?!= include('TemaOscuro'); ?>
+  <?!= include('HeaderGuest', {baseUrl: baseUrl, consulta: ''}); ?>
+
+  <main class="bd-body">
+    <h3 class="bd-h">Explorar libros</h3>
+
+    <!-- Menú para filtrar por autor (sin tocar el buscador de arriba). -->
+    <?!= include('FiltroAutor', {baseUrl: baseUrl, autores: autores, autorActual: '', consultaActual: ''}); ?>
+
+    <div class="bd-grid">
+      <!--
+        Este "for" es JavaScript de servidor (Apps Script), no del navegador:
+        se ejecuta ANTES de mandar la página, y arma una tarjeta por cada
+        libro que llegó en la variable "libros" (la puso Code.gs).
+      -->
+      <? for (var i = 0; i < libros.length; i++) { ?>
+        <a class="bd-card" href="<?= baseUrl ?>?page=lector&id=<?= libros[i].id ?>">
+          <!--
+            La portada no es una imagen: es un degradado de dos colores
+            propios del libro (libro.colorA/colorB, definidos en Code.gs)
+            con la inicial del título encima. El resto del efecto (el
+            "lomo" oscuro y el brillo diagonal) ya está en Stylesheet.html.
+            El botón de corazón es de Favoritos.html: guarda el id del
+            libro en el navegador de quien entra, sin necesitar cuenta.
+          -->
+          <div class="bd-cover" style="background: linear-gradient(135deg, <?= libros[i].colorA ?>, <?= libros[i].colorB ?>);">
+            <span class="bd-cover-inicial"><?= libros[i].titulo.charAt(0) ?></span>
+            <button class="bd-fav-btn" type="button" data-id="<?= libros[i].id ?>" title="Guardar en favoritos" onclick="alternarFavorito(this, event)">♡</button>
+          </div>
+          <p class="bd-title"><?= libros[i].titulo ?></p>
+          <p class="bd-author"><?= libros[i].autor ?></p>
+          <p class="bd-rating"><?= textoEstrellas(libros[i].valoracion) ?></p>
+        </a>
+      <? } ?>
+    </div>
+  </main>
+
+  <?!= include('Footer'); ?>
+  <?!= include('Favoritos'); ?>
+</body>
+</html>

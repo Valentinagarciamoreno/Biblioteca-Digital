@@ -1,0 +1,33 @@
+<!--
+  TemaOscuro.html — el botón redondo de arriba a la derecha para cambiar
+  entre tema claro y oscuro. Se incluye justo después de abrir <body> en
+  las 6 pantallas, así aparece siempre en el mismo lugar sin importar en
+  cuál estés.
+
+  Igual que los favoritos, la preferencia (claro u oscuro) se guarda en el
+  navegador de la persona (localStorage), no en el servidor: cada quien ve
+  el tema que eligió la última vez, en ese navegador.
+-->
+<button id="bd-tema-boton" class="bd-tema-boton" type="button" title="Cambiar a tema oscuro">🌙</button>
+<script>
+  (function () {
+    var LLAVE_TEMA = 'bd_tema';
+    var boton = document.getElementById('bd-tema-boton');
+
+    var temaGuardado = null;
+    try { temaGuardado = localStorage.getItem(LLAVE_TEMA); } catch (error) { temaGuardado = null; }
+
+    if (temaGuardado === 'oscuro') {
+      document.body.classList.add('bd-oscuro');
+      boton.textContent = '☀️';
+      boton.title = 'Cambiar a tema claro';
+    }
+
+    boton.addEventListener('click', function () {
+      var quedoOscuro = document.body.classList.toggle('bd-oscuro');
+      boton.textContent = quedoOscuro ? '☀️' : '🌙';
+      boton.title = quedoOscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
+      try { localStorage.setItem(LLAVE_TEMA, quedoOscuro ? 'oscuro' : 'claro'); } catch (error) { /* no pasa nada si no se puede guardar */ }
+    });
+  })();
+</script>

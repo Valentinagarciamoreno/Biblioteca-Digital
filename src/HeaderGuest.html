@@ -1,0 +1,34 @@
+<!--
+  HeaderGuest.html — encabezado para cuando NO se ha iniciado sesión.
+  Se usa en Inicio.html y Resultados.html.
+  Tiene: el nombre del sitio (con enlace a Inicio), el buscador y el botón
+  "Iniciar sesión".
+
+  Este archivo espera que quien lo incluya le pase dos datos (ver Code.gs,
+  función include()):
+    - baseUrl: la URL real de la app, para armar los enlaces.
+    - consulta: lo último que se buscó (para dejarlo escrito en la caja de
+      búsqueda cuando estamos en la pantalla de Resultados). Si no aplica,
+      se le pasa un texto vacío.
+-->
+<header class="bd-header">
+  <span class="bd-word"><a href="<?= baseUrl ?>?page=inicio">Biblioteca Digital</a></span>
+
+  <!--
+    Este formulario NO usa JavaScript: al escribir y darle Enter (o clic en
+    la lupa), el navegador recarga la app en "baseUrl?page=resultados&q=...".
+    Es Code.gs (doGet) el que después filtra los libros con ese texto.
+    Ojo: la acción del formulario tiene que ser la URL completa (baseUrl) y
+    no quedar vacía ("action=''"), porque una acción vacía se resolvería
+    contra la dirección interna del iframe de Google, no contra la app.
+  -->
+  <form class="bd-search-form" method="get" action="<?= baseUrl ?>">
+    <input type="hidden" name="page" value="resultados">
+    <span class="bd-search">
+      <svg class="bd-mag" viewBox="0 0 24 24" fill="none" stroke="#6A7B8A" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
+      <input type="text" name="q" placeholder="Buscar libro, autor o tema…" value="<?= consulta ?>">
+    </span>
+  </form>
+
+  <a class="bd-btn" href="<?= baseUrl ?>?page=login">Iniciar sesión</a>
+</header>

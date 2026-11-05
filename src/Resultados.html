@@ -1,0 +1,48 @@
+<!--
+  Resultados.html — muestra lo que encontró el buscador y/o el filtro por
+  autor. "consulta", "autorFiltro", "tituloResultados" y "resultados" ya
+  vienen calculados desde Code.gs — aquí solo se pintan.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <?!= include('TemaOscuro'); ?>
+  <?!= include('HeaderGuest', {baseUrl: baseUrl, consulta: consulta}); ?>
+
+  <main class="bd-body">
+    <h3 class="bd-h"><?= tituloResultados ?></h3>
+    <!-- Este "if" en línea agrega la "s" de plural solo si hay más de 1 resultado -->
+    <p class="bd-sub"><?= resultados.length ?> libro<?= resultados.length === 1 ? '' : 's' ?> encontrado<?= resultados.length === 1 ? '' : 's' ?></p>
+
+    <!-- Mismo menú de filtro que en Inicio, pero aquí ya viene con el autor
+         y el texto de búsqueda actuales preseleccionados. -->
+    <?!= include('FiltroAutor', {baseUrl: baseUrl, autores: autores, autorActual: autorFiltro, consultaActual: consulta}); ?>
+
+    <!-- Si no hubo coincidencias, mostramos un aviso en vez de una cuadrícula vacía -->
+    <? if (resultados.length === 0) { ?>
+      <p class="bd-empty">No encontramos libros que coincidan con tu búsqueda. Intenta con otro título, autor, o quita el filtro.</p>
+    <? } else { ?>
+      <div class="bd-grid cols-3">
+        <? for (var i = 0; i < resultados.length; i++) { ?>
+          <a class="bd-card" href="<?= baseUrl ?>?page=lector&id=<?= resultados[i].id ?>">
+            <div class="bd-cover" style="background: linear-gradient(135deg, <?= resultados[i].colorA ?>, <?= resultados[i].colorB ?>);">
+              <span class="bd-cover-inicial"><?= resultados[i].titulo.charAt(0) ?></span>
+              <button class="bd-fav-btn" type="button" data-id="<?= resultados[i].id ?>" title="Guardar en favoritos" onclick="alternarFavorito(this, event)">♡</button>
+            </div>
+            <p class="bd-title"><?= resultados[i].titulo ?></p>
+            <p class="bd-author"><?= resultados[i].autor ?></p>
+            <p class="bd-rating"><?= textoEstrellas(resultados[i].valoracion) ?></p>
+          </a>
+        <? } ?>
+      </div>
+    <? } ?>
+  </main>
+
+  <?!= include('Footer'); ?>
+  <?!= include('Favoritos'); ?>
+</body>
+</html>

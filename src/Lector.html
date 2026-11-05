@@ -1,0 +1,141 @@
+<!--
+  Lector.html — pantalla para leer un libro.
+  "libro" (título, autor, valoración), "paginas" (el texto de muestra) y
+  "similares" (otros libros del mismo autor) vienen de Code.gs. Pasar de
+  página, cambiar el tamaño de letra y marcar favorito pasan aquí mismo,
+  en el navegador, con JavaScript — no hace falta volver a pedirle nada
+  al servidor.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <?!= include('TemaOscuro'); ?>
+
+  <div class="rd-bar">
+    <a class="rd-back" href="<?= baseUrl ?>?page=inicio">‹ Volver</a>
+    <div class="rd-titles">
+      <span class="rd-book"><?= libro.titulo ?></span>
+      <span class="rd-author"><?= libro.autor ?> · <?= textoEstrellas(libro.valoracion) ?></span>
+    </div>
+    <div class="rd-tools">
+      <button class="rd-a" id="btn-favorito" type="button" data-id="<?= libro.id ?>" title="Guardar en favoritos" onclick="alternarFavorito(this, event)">♡</button>
+      <button class="rd-a" id="btn-menos" type="button" title="Reducir letra">A−</button>
+      <button class="rd-a" id="btn-mas" type="button" title="Aumentar letra">A+</button>
+    </div>
+  </div>
+
+  <!-- Barra de progreso: se llena según en qué página vas (la pinta render() en el script). -->
+  <div class="rd-progreso-barra"><div class="rd-progreso-relleno" id="progreso-relleno"></div></div>
+
+  <!-- Estos dos bloques (título y párrafos) los llena JavaScript con render() -->
+  <div class="rd-page-area">
+    <div class="rd-column" id="columna">
+      <h4 class="rd-chapter" id="titulo-capitulo"></h4>
+      <div id="parrafos"></div>
+    </div>
+  </div>
+
+  <div class="rd-nav">
+    <button class="rd-nav-btn" id="btn-anterior" type="button">‹ Anterior</button>
+    <span class="rd-progress" id="progreso"></span>
+    <button class="rd-nav-btn" id="btn-siguiente" type="button">Siguiente ›</button>
+  </div>
+
+  <!--
+    "Libros similares": otros libros del mismo autor. Si "similares" llega
+    vacío (el autor no tiene más libros en el catálogo), esta sección
+    completa no se dibuja.
+  -->
+  <? if (similares.length > 0) { ?>
+    <div class="rd-similares">
+      <h4>Libros similares</h4>
+      <div class="bd-grid cols-3">
+        <? for (var i = 0; i < similares.length; i++) { ?>
+          <a class="bd-card" href="<?= baseUrl ?>?page=lector&id=<?= similares[i].id ?>">
+            <div class="bd-cover" style="background: linear-gradient(135deg, <?= similares[i].colorA ?>, <?= similares[i].colorB ?>);">
+              <span class="bd-cover-inicial"><?= similares[i].titulo.charAt(0) ?></span>
+              <button class="bd-fav-btn" type="button" data-id="<?= similares[i].id ?>" title="Guardar en favoritos" onclick="alternarFavorito(this, event)">♡</button>
+            </div>
+            <p class="bd-title"><?= similares[i].titulo ?></p>
+            <p class="bd-author"><?= similares[i].autor ?></p>
+            <p class="bd-rating"><?= textoEstrellas(similares[i].valoracion) ?></p>
+          </a>
+        <? } ?>
+      </div>
+    </div>
+  <? } ?>
+
+  <script>
+    // La línea de abajo convierte el arreglo de páginas que mandó Code.gs
+    // (que allá es un objeto de Apps Script) en texto JSON, y aquí, del
+    // lado del navegador, JavaScript lo vuelve a convertir en un arreglo
+    // normal. Es la forma de "pasarle" datos del servidor al JavaScript
+    // que corre en la pantalla de la persona.
+    // Importante: no se puede escribir esa etiqueta de plantilla dentro de
+    // un comentario en este archivo, porque Apps Script la ejecutaría igual.
+    var paginas = <?!= JSON.stringify(paginas) ?>;
+
+    var indice = 0;        // en qué página vamos (0 = la primera)
+    var tamanoLetra = 16;  // tamaño de letra actual, en píxeles
+
+    // Vuelve a dibujar la página actual: el título del capítulo, sus
+    // párrafos, el contador "PÁGINA X DE Y", la barra de progreso, y si
+    // los botones deben estar apagados (cuando ya no hay "antes" o "después").
+    function render() {
+      var pagina = paginas[indice];
+
+      document.getElementById('titulo-capitulo').textContent = pagina.capitulo;
+
+      // Primero borramos los párrafos anteriores, luego agregamos los nuevos.
+      var contenedor = document.getElementById('parrafos');
+      contenedor.innerHTML = '';
+      pagina.parrafos.forEach(function (texto) {
+        var p = document.createElement('p');
+        p.className = 'rd-p';
+        p.textContent = texto;
+        contenedor.appendChild(p);
+      });
+
+      document.getElementById('progreso').textContent = 'PÁGINA ' + (indice + 1) + ' DE ' + paginas.length;
+
+      // La barra se llena en proporción a en qué página vas: si son 4
+      // páginas y vas en la 2 (índice 1), queda en (1+1)/4 = 50%.
+      var porcentaje = ((indice + 1) / paginas.length) * 100;
+      document.getElementById('progreso-relleno').style.width = porcentaje + '%';
+
+      // "Anterior" se apaga en la primera página; "Siguiente" se apaga en la última.
+      document.getElementById('btn-anterior').disabled = indice === 0;
+      document.getElementById('btn-siguiente').disabled = indice === paginas.length - 1;
+    }
+
+    // Cada botón, al hacer clic, mueve el índice una posición y vuelve a dibujar.
+    document.getElementById('btn-anterior').addEventListener('click', function () {
+      if (indice > 0) { indice--; render(); }
+    });
+    document.getElementById('btn-siguiente').addEventListener('click', function () {
+      if (indice < paginas.length - 1) { indice++; render(); }
+    });
+
+    // A− y A+ cambian el tamaño de letra de toda la columna de texto
+    // (el capítulo y los párrafos usan tamaños relativos a ella, así que
+    // los dos se agrandan o achican juntos). No baja de 12px ni sube de 24px.
+    document.getElementById('btn-menos').addEventListener('click', function () {
+      tamanoLetra = Math.max(12, tamanoLetra - 2);
+      document.getElementById('columna').style.fontSize = tamanoLetra + 'px';
+    });
+    document.getElementById('btn-mas').addEventListener('click', function () {
+      tamanoLetra = Math.min(24, tamanoLetra + 2);
+      document.getElementById('columna').style.fontSize = tamanoLetra + 'px';
+    });
+
+    // Dibuja la primera página apenas se carga la pantalla.
+    render();
+  </script>
+
+  <?!= include('Favoritos'); ?>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!--
+  IniciarSesion.html — formulario de inicio de sesión.
+  Todavía no hay una base de datos real de usuarios (eso es de una evidencia
+  posterior), así que esta pantalla valida los datos EN EL NAVEGADOR
+  (con JavaScript) y, si están bien escritos, simula que entró y lo manda
+  al Perfil. No comprueba una contraseña real todavía.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <?!= include('TemaOscuro'); ?>
+  <div class="bd-auth-wrap">
+    <div class="bd-card-form">
+      <h4>Iniciar sesión</h4>
+      <p class="bd-hint">Entra para ver tu perfil, tu historial y tus favoritos.</p>
+
+      <div class="bd-field">
+        <label for="correo">Correo electrónico</label>
+        <input class="bd-input" type="email" id="correo" placeholder="tucorreo@ejemplo.com">
+        <!-- Este mensaje de error empieza oculto (ver clase .bd-field-error en el CSS) -->
+        <div class="bd-field-error" id="err-correo">Escribe un correo válido.</div>
+      </div>
+      <div class="bd-field">
+        <label for="clave">Contraseña</label>
+        <input class="bd-input" type="password" id="clave" placeholder="••••••••">
+        <div class="bd-field-error" id="err-clave">La contraseña no puede estar vacía.</div>
+      </div>
+
+      <!--
+        type="button" (y no "submit") porque no hay servidor que reciba este
+        formulario: todo el trabajo de validar lo hace la función de abajo.
+      -->
+      <button class="bd-enter" id="btn-entrar" type="button">Entrar</button>
+      <div class="bd-form-msg" id="msg-ok">Sesión iniciada. Redirigiendo a tu perfil…</div>
+
+      <span class="bd-switch">¿No tienes cuenta? <a href="<?= baseUrl ?>?page=registro">Regístrate</a></span>
+      <!-- Leer no requiere cuenta (ver la portada del proyecto): este enlace lo deja claro y visible. -->
+      <span class="bd-switch"><a href="<?= baseUrl ?>?page=inicio">Seguir sin registrarte</a></span>
+    </div>
+  </div>
+
+  <script>
+    // "baseUrl" viene de Code.gs. La necesitamos aquí porque el botón
+    // "Entrar" redirige por JavaScript, no con un enlace normal de HTML.
+    var baseUrl = '<?= baseUrl ?>';
+
+    // Comprueba que el texto tenga la forma de un correo (algo@algo.algo).
+    // No verifica que el correo exista de verdad, solo que esté bien escrito.
+    function validarCorreo(valor) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
+    }
+
+    // Se ejecuta cada vez que la persona hace clic en el botón "Entrar".
+    document.getElementById('btn-entrar').addEventListener('click', function () {
+      var correo = document.getElementById('correo');
+      var clave = document.getElementById('clave');
+
+      // ¿Está bien cada campo?
+      var okCorreo = validarCorreo(correo.value.trim());
+      var okClave = clave.value.trim().length > 0;
+
+      // Si un campo está mal, le ponemos el borde rojo y mostramos su
+      // mensaje de error. Si está bien, se los quitamos (por si ya se
+      // habían mostrado en un intento anterior).
+      correo.classList.toggle('invalid', !okCorreo);
+      document.getElementById('err-correo').classList.toggle('show', !okCorreo);
+      clave.classList.toggle('invalid', !okClave);
+      document.getElementById('err-clave').classList.toggle('show', !okClave);
+
+      // Solo si los dos campos están bien, mostramos el mensaje de éxito
+      // y, medio segundo después, mandamos a la persona a su Perfil.
+      if (okCorreo && okClave) {
+        document.getElementById('msg-ok').classList.add('ok');
+        setTimeout(function () {
+          window.top.location.href = baseUrl + '?page=perfil';
+        }, 700);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!--
+  Stylesheet.html — todos los estilos (colores, tipografía, tamaños) en un
+  solo lugar. Cada una de las 6 pantallas lo trae con la función include()
+  de Code.gs, para no repetir el mismo CSS 6 veces. Si mañana quieres
+  cambiar un color, lo cambias aquí y se actualiza en todas las pantallas
+  a la vez.
+  Importante: aquí NUNCA se debe escribir una etiqueta de plantilla (los
+  signos de interrogación con paréntesis angulares) ni siquiera dentro de
+  un comentario, porque Apps Script las ejecuta igual y este archivo
+  terminaría intentando incluirse a sí mismo.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,500&display=swap">
+<style>
+  /* Colores del proyecto, con nombre en vez de código hexadecimal suelto.
+     Así en el resto del archivo se lee "var(--bd-accent)" (el color de
+     acento) en vez de "#C6862E", que no dice nada por sí solo. */
+  :root {
+    --bd-slate: #243B53;      /* azul pizarra: encabezado y pie de página */
+    --bd-page: #F7F6F3;       /* color de fondo de toda la página */
+    --bd-card: #FFFFFF;       /* blanco: tarjetas y formularios */
+    --bd-accent: #C6862E;     /* ámbar: botones principales */
+    --bd-accent-dark: #A66F22; /* ámbar oscuro: botones al pasar el mouse */
+    --bd-cover: #B7C3CF;      /* gris azulado: portadas de libro (de relleno) */
+    --bd-ink: #1D2A38;        /* casi negro: texto principal */
+    --bd-muted: #6A7B8A;      /* gris medio: texto secundario (autor, pie) */
+    --bd-line: #C9D2DA;       /* gris claro: bordes de campos y líneas */
+    --bd-link: #2A5C8A;       /* azul: enlaces de texto */
+    --bd-error: #B3261E;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bd-page);
+    color: var(--bd-ink);
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--bd-link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---- Encabezado ---- */
+  .bd-header {
+    background: var(--bd-slate);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 14px 28px;
+  }
+  .bd-word {
+    font-family: Lora, Georgia, serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .bd-word a { color: #fff; }
+  .bd-search-form { flex: 1; min-width: 200px; max-width: 420px; display: flex; }
+  .bd-search {
+    width: 100%;
+    height: 40px;
+    background: var(--bd-card);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: none;
+  }
+  .bd-mag { width: 18px; height: 18px; flex: none; }
+  .bd-search input {
+    border: none;
+    outline: none;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    color: var(--bd-ink);
+    width: 100%;
+    background: transparent;
+  }
+  .bd-search input::placeholder { color: var(--bd-muted); }
+  .bd-btn, .bd-enter, .bd-outline-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding: 0 20px;
+    background: var(--bd-accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: Inter, sans-serif;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .bd-btn:hover, .bd-enter:hover { background: var(--bd-accent-dark); text-decoration: none; }
+  .bd-outline-btn { background: transparent; border: 1px solid var(--bd-line); color: var(--bd-ink); }
+  .bd-outline-btn:hover { background: var(--bd-card); text-decoration: none; }
+  .bd-avatar-btn {
+    margin-left: auto;
+    height: 40px; width: 40px;
+    border-radius: 50%;
+    background: var(--bd-accent);
+    color: #fff;
+    font-family: Lora, serif;
+    font-weight: 600;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer;
+  }
+  .bd-header .bd-btn { margin-left: auto; }
+
+  /* ---- Cuerpo ---- */
+  .bd-body { max-width: 1160px; margin: 0 auto; padding: 32px 28px 56px; min-height: calc(100vh - 72px - 62px); }
+  .bd-h { font-family: Lora, Georgia, serif; font-weight: 600; font-size: 26px; color: var(--bd-ink); margin: 0 0 8px; }
+  .bd-sub { font-size: 14px; color: var(--bd-muted); margin: 0 0 24px; }
+
+  /* Cuadrícula de libros: 4 columnas en Inicio, 3 en Resultados.
+     Las dos líneas @media de abajo son lo que hace que la página se vea
+     bien en cualquier pantalla: en tablet baja a 2 columnas, y en celular
+     a 1 sola columna, sin que haya que tocar el HTML. */
+  .bd-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px 28px; }
+  .bd-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 900px) { .bd-grid, .bd-grid.cols-3 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .bd-grid, .bd-grid.cols-3 { grid-template-columns: 1fr; } }
+
+  .bd-card { display: block; }
+  .bd-card:hover .bd-cover { transform: translateY(-3px); box-shadow: inset 0 0 0 1px rgba(29,42,56,.12), 0 10px 22px rgba(29,42,56,.22); }
+
+  /* Portada "llamativa" sin usar una imagen real (así no hay problema de
+     derechos de autor con portadas de libros de verdad, ver Backlog).
+     El color de fondo (background) lo pone cada tarjeta con un "style"
+     en línea, tomado de libro.colorA / libro.colorB — por eso aquí no
+     hay un solo color fijo, sino que dejamos listo el resto del efecto:
+     el lomo oscuro a la izquierda, el brillo diagonal y la letra grande. */
+  .bd-cover {
+    aspect-ratio: 316 / 220;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(29,42,56,.07);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .bd-cover::before { /* el "lomo" del libro, para que no se vea un rectángulo plano */
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 10%;
+    background: rgba(0,0,0,.22);
+  }
+  .bd-cover::after { /* un brillo diagonal suave, como el de una tapa satinada */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,.22), transparent 55%);
+  }
+  .bd-cover-inicial {
+    position: relative;
+    font-family: Lora, Georgia, serif;
+    font-weight: 600;
+    font-size: 2.6rem;
+    color: rgba(255,255,255,.92);
+    text-shadow: 0 2px 6px rgba(0,0,0,.3);
+  }
+  .bd-title { font-family: Lora, Georgia, serif; font-weight: 500; font-size: 16px; color: var(--bd-ink); line-height: 1.25; margin: 12px 0 4px; }
+  .bd-author { font-size: 13px; color: var(--bd-muted); margin: 0; }
+  .bd-empty { color: var(--bd-muted); font-size: 14px; padding: 20px 0; }
+
+  /* ---- Pie ---- */
+  .bd-footer {
+    background: var(--bd-slate);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 18px 28px;
+  }
+  .bd-foot-note { font-size: 13px; color: #fff; }
+  .bd-foot-links { font-size: 13px; color: rgba(255,255,255,.72); }
+  .bd-foot-links a { color: rgba(255,255,255,.85); }
+
+  /* ---- Tarjetas de formulario (login / registro) ---- */
+  .bd-auth-wrap { display: flex; align-items: center; justify-content: center; padding: 56px 20px; min-height: calc(100vh - 72px); }
+  .bd-card-form { width: 100%; max-width: 420px; background: var(--bd-card); border-radius: 12px; box-shadow: 0 14px 40px rgba(29,42,56,.14); padding: 34px; }
+  .bd-card-form.wide { max-width: 460px; }
+  .bd-card-form h4 { font-family: Lora, Georgia, serif; font-weight: 600; font-size: 24px; color: var(--bd-ink); margin: 0 0 8px; }
+  .bd-card-form .bd-hint { font-size: 13px; color: var(--bd-muted); margin: 0 0 22px; }
+  .bd-field { margin-bottom: 16px; }
+  .bd-field label { display: block; font-size: 13px; font-weight: 500; color: var(--bd-ink); margin-bottom: 6px; }
+  .bd-input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid var(--bd-line);
+    border-radius: 8px;
+    background: var(--bd-card);
+    padding: 0 14px;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    color: var(--bd-ink);
+  }
+  .bd-input:focus { outline: 2px solid var(--bd-accent); outline-offset: 1px; border-color: var(--bd-accent); }
+  .bd-input.invalid { border-color: var(--bd-error); }
+  .bd-field-error { display: none; font-size: 12.5px; color: var(--bd-error); margin-top: 5px; }
+  .bd-field-error.show { display: block; }
+  .bd-enter { width: 100%; margin-top: 6px; }
+  .bd-switch { display: block; text-align: center; font-size: 13.5px; color: var(--bd-muted); margin-top: 18px; }
+  .bd-switch a { color: var(--bd-link); font-weight: 600; }
+  .bd-form-msg { display: none; margin-top: 16px; padding: 10px 14px; border-radius: 8px; font-size: 13.5px; }
+  .bd-form-msg.ok { display: block; background: #E6F1EC; color: #245C40; }
+
+  /* ---- Lector de libro ---- */
+  .rd-bar {
+    background: var(--bd-slate);
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 24px; flex-wrap: wrap;
+  }
+  .rd-back { color: #fff; font-size: 14px; font-weight: 600; }
+  .rd-titles { display: flex; flex-direction: column; }
+  .rd-book { font-family: Lora, serif; font-weight: 600; font-size: 15px; color: #fff; }
+  .rd-author { font-size: 12px; color: rgba(255,255,255,.65); }
+  .rd-tools { margin-left: auto; display: flex; gap: 8px; }
+  .rd-a {
+    width: 30px; height: 30px; border: 1px solid rgba(255,255,255,.3); border-radius: 5px;
+    color: #fff; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+    background: transparent; cursor: pointer;
+  }
+  .rd-a:hover { background: rgba(255,255,255,.12); }
+  .rd-a.activo { color: #ff6b6b; border-color: #ff6b6b; }
+  .rd-page-area { display: flex; justify-content: center; padding: 40px 20px; }
+  /* El tamaño de letra de esta columna (font-size: 16px) es la "base".
+     El título del capítulo y los párrafos usan "em" en vez de píxeles fijos
+     (1.25em, 1em), o sea "1.25 veces" y "1 vez" ese tamaño base. Así,
+     cuando el botón A+/A- de Lector.html cambia el font-size de .rd-column
+     con JavaScript, el título y el texto crecen o encogen juntos, en la
+     misma proporción. */
+  .rd-column { width: 100%; max-width: 660px; font-size: 16px; }
+  .rd-chapter { font-family: Lora, serif; font-weight: 600; font-size: 1.25em; color: var(--bd-ink); margin: 0 0 18px; }
+  .rd-p { font-family: Lora, Georgia, serif; font-size: 1em; line-height: 1.75; color: var(--bd-ink); margin: 0 0 16px; }
+  .rd-nav {
+    height: 58px; background: var(--bd-card); border-top: 1px solid var(--bd-line);
+    display: flex; align-items: center; justify-content: center; gap: 28px;
+  }
+  .rd-nav-btn { font-size: 14px; font-weight: 600; color: var(--bd-link); background: none; border: none; cursor: pointer; font-family: Inter, sans-serif; }
+  .rd-nav-btn:disabled { color: var(--bd-line); cursor: default; }
+  .rd-progress { font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--bd-muted); }
+
+  /* ---- Perfil ---- */
+  .pf-hero { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; }
+  .pf-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--bd-slate); color: #fff;
+    font-family: Lora, serif; font-weight: 600; font-size: 28px;
+    display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .pf-name { font-family: Lora, serif; font-weight: 600; font-size: 21px; color: var(--bd-ink); margin: 0 0 4px; }
+  .pf-mail { font-size: 14px; color: var(--bd-muted); margin: 0; }
+  .pf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+  @media (max-width: 600px) { .pf-stats { grid-template-columns: 1fr; } }
+  .pf-stat { background: var(--bd-card); border-radius: 8px; padding: 18px 20px; box-shadow: inset 0 0 0 1px rgba(29,42,56,.06); }
+  .pf-stat b { display: block; font-family: Lora, serif; font-size: 24px; color: var(--bd-ink); }
+  .pf-stat span { font-size: 12.5px; color: var(--bd-muted); }
+  .pf-hist-h { font-family: Lora, serif; font-weight: 600; font-size: 16px; color: var(--bd-ink); margin: 0 0 14px; }
+  .pf-hist-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--bd-line); }
+  .pf-hist-row:first-of-type { border-top: none; }
+  .pf-mini-cover {
+    width: 32px; height: 44px; border-radius: 4px; flex: none;
+    position: relative; overflow: hidden;
+  }
+  .pf-mini-cover::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 18%; background: rgba(0,0,0,.22); }
+  .pf-hist-title { font-family: Lora, serif; font-size: 14.5px; color: var(--bd-ink); }
+  .pf-hist-date { margin-left: auto; font-family: ui-monospace, monospace; font-size: 12px; color: var(--bd-muted); }
+  .pf-signout { margin-top: 28px; }
+
+  /* ---- Perfil: banner de libro destacado ---- */
+  .pf-promo {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+    background: linear-gradient(120deg, var(--bd-slate), #33506e);
+    color: #fff;
+    border-radius: 10px;
+    padding: 22px 26px;
+    margin-bottom: 32px;
+  }
+  .pf-promo-tag {
+    display: inline-block;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--bd-accent);
+    background: rgba(255,255,255,.1);
+    border-radius: 999px;
+    padding: 4px 10px;
+    margin-bottom: 8px;
+  }
+  .pf-promo h4 { font-family: Lora, serif; font-weight: 600; font-size: 20px; margin: 0 0 4px; }
+  .pf-promo p { font-size: 13.5px; color: rgba(255,255,255,.75); margin: 0; }
+
+  /* ---- Perfil: recomendaciones ---- */
+  .pf-reco-note { font-size: 13px; color: var(--bd-muted); margin: -8px 0 16px; }
+
+  /* ---- Valoración con estrellas ---- */
+  /* El texto ya viene armado como "★★★☆☆" desde textoEstrellas() en
+     Code.gs; aquí solo le damos color y tamaño. */
+  .bd-rating { font-size: 13px; color: var(--bd-accent); margin: 2px 0 0; letter-spacing: 1px; }
+
+  /* ---- Botón de favorito (corazón) ---- */
+  /* Vive DENTRO de .bd-cover, arriba a la derecha, sobre la portada. */
+  .bd-fav-btn {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,.35);
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .bd-fav-btn:hover { background: rgba(0,0,0,.5); }
+  .bd-fav-btn.activo { color: #ff6b6b; }
+
+  /* ---- Filtro por autor ---- */
+  .bd-filtro-autor { display: flex; align-items: center; gap: 8px; margin: -8px 0 24px; }
+  .bd-filtro-autor label { font-size: 13px; color: var(--bd-muted); }
+  .bd-filtro-autor select {
+    height: 36px;
+    border: 1px solid var(--bd-line);
+    border-radius: 6px;
+    background: var(--bd-card);
+    color: var(--bd-ink);
+    font-family: Inter, sans-serif;
+    font-size: 13.5px;
+    padding: 0 8px;
+  }
+
+  /* ---- Barra de progreso del Lector ---- */
+  .rd-progreso-barra { height: 4px; background: var(--bd-line); }
+  .rd-progreso-relleno { height: 100%; background: var(--bd-accent); width: 0%; transition: width .2s ease; }
+
+  /* ---- "Libros similares" (al final del Lector) ---- */
+  .rd-similares { max-width: 660px; margin: 0 auto; padding: 0 20px 48px; }
+  .rd-similares h4 { font-family: Lora, serif; font-weight: 600; font-size: 16px; color: var(--bd-ink); margin: 0 0 14px; }
+
+  /* ---- Botón de tema claro/oscuro ---- */
+  .bd-tema-boton {
+    position: fixed;
+    top: 14px; right: 14px;
+    z-index: 50;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--bd-line);
+    background: var(--bd-card);
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+
+  /* ---- Tema oscuro ---- */
+  /* Al hacer clic en el botón de arriba, TemaOscuro.html le agrega la
+     clase "bd-oscuro" a <body>. Como los colores del sitio están escritos
+     como variables (var(--bd-page), var(--bd-ink), etc.), basta con volver
+     a definir esas mismas variables aquí para que TODO el sitio cambie de
+     colores de una sola vez — no hay que tocar ninguna otra regla. */
+  body.bd-oscuro {
+    --bd-page: #14181c;
+    --bd-card: #1e242b;
+    --bd-ink: #e8ecef;
+    --bd-muted: #8b96a1;
+    --bd-line: #333b44;
+    --bd-link: #7fb2e0;
+  }
+</style>

@@ -1,0 +1,22 @@
+<!--
+  HeaderAuth.html — encabezado para cuando SÍ hay sesión iniciada.
+  Se usa solo en Perfil.html. La diferencia con HeaderGuest.html es que
+  aquí, en vez del botón "Iniciar sesión", se ve el avatar redondo con la
+  inicial del usuario, que lleva al Perfil.
+
+  Espera que quien lo incluya le pase "baseUrl" (ver Code.gs, función
+  include()) para armar los enlaces con la URL real de la app.
+-->
+<header class="bd-header">
+  <span class="bd-word"><a href="<?= baseUrl ?>?page=inicio">Biblioteca Digital</a></span>
+
+  <form class="bd-search-form" method="get" action="<?= baseUrl ?>">
+    <input type="hidden" name="page" value="resultados">
+    <span class="bd-search">
+      <svg class="bd-mag" viewBox="0 0 24 24" fill="none" stroke="#6A7B8A" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
+      <input type="text" name="q" placeholder="Buscar libro, autor o tema…">
+    </span>
+  </form>
+
+  <a class="bd-avatar-btn" href="<?= baseUrl ?>?page=perfil" title="Mi perfil">V</a>
+</header>

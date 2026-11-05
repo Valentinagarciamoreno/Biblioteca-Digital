@@ -1,0 +1,87 @@
+<!--
+  Favoritos.html — el JavaScript de los corazones ♡ / ♥ de "favorito".
+
+  Se incluye al final de cada pantalla que muestra tarjetas de libros
+  (Inicio, Resultados, Perfil, Lector). No tiene su propio HTML visible:
+  solo trae las funciones que usan los botones de corazón de esas
+  pantallas.
+
+  Cómo guardamos los favoritos: como todavía no hay cuentas de usuario de
+  verdad, los favoritos se guardan en el propio navegador de la persona
+  (localStorage), como una lista de ids de libros. Eso quiere decir que
+  los favoritos son distintos en cada computador/navegador — el día que
+  haya cuentas reales, esto se cambiaría por guardarlos en el servidor.
+-->
+<script>
+  var LLAVE_FAVORITOS = 'bd_favoritos';
+
+  // Lee la lista de ids favoritos guardada. Si no hay nada guardado, o el
+  // navegador no deja usar localStorage (pasa en algunas ventanas
+  // privadas), devuelve una lista vacía en vez de romper la página.
+  function obtenerFavoritos() {
+    try {
+      return JSON.parse(localStorage.getItem(LLAVE_FAVORITOS) || '[]');
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function guardarFavoritos(listaDeIds) {
+    try {
+      localStorage.setItem(LLAVE_FAVORITOS, JSON.stringify(listaDeIds));
+    } catch (error) {
+      // Si no se puede guardar, no pasa nada grave: simplemente no
+      // quedará recordado la próxima vez.
+    }
+  }
+
+  // Se llama cuando alguien hace clic en el corazón de una tarjeta.
+  // "boton" es el propio <button> que se tocó.
+  function alternarFavorito(boton, event) {
+    // Sin esto, el clic también activaría el enlace de la tarjeta (que
+    // lleva al Lector) porque el corazón vive DENTRO de esa tarjeta.
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+
+    var id = parseInt(boton.getAttribute('data-id'), 10);
+    var favoritos = obtenerFavoritos();
+    var posicion = favoritos.indexOf(id);
+
+    if (posicion === -1) {
+      favoritos.push(id);
+      boton.textContent = '♥';
+      boton.classList.add('activo');
+    } else {
+      favoritos.splice(posicion, 1);
+      boton.textContent = '♡';
+      boton.classList.remove('activo');
+    }
+    guardarFavoritos(favoritos);
+
+    // Si la pantalla actual tiene su propia función para redibujar (por
+    // ejemplo, Perfil.html tiene una sección de "Tus favoritos" que debe
+    // actualizarse al instante), la llamamos. Si no existe, no pasa nada.
+    if (typeof alActualizarFavoritos === 'function') {
+      alActualizarFavoritos();
+    }
+  }
+
+  // Al cargar la pantalla, pinta en rojo (♥) los corazones de los libros
+  // que ya estaban guardados como favoritos, para que se vea consistente
+  // con lo que la persona guardó la última vez.
+  function pintarFavoritosGuardados() {
+    var favoritos = obtenerFavoritos();
+    // ".bd-fav-btn" son los corazones de las tarjetas; "#btn-favorito" es
+    // el botón de favorito que va junto a A−/A+ en la barra del Lector
+    // (mismo comportamiento, apariencia distinta porque vive en otro lugar).
+    var botones = document.querySelectorAll('.bd-fav-btn, #btn-favorito');
+    for (var i = 0; i < botones.length; i++) {
+      var id = parseInt(botones[i].getAttribute('data-id'), 10);
+      if (favoritos.indexOf(id) !== -1) {
+        botones[i].textContent = '♥';
+        botones[i].classList.add('activo');
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', pintarFavoritosGuardados);
+</script>

@@ -1,0 +1,26 @@
+<!--
+  FiltroAutor.html — menú desplegable para filtrar los libros por autor.
+  Se usa en Inicio.html y Resultados.html.
+
+  Al elegir un autor, el propio formulario se envía solo (con
+  onchange="this.form.submit()", sin necesitar un botón de "Aplicar") y
+  recarga la pantalla de Resultados con ese autor. El campo "q" oculto
+  lleva lo que ya se había buscado, para no perderlo al filtrar.
+
+  Quien lo incluya debe pasarle (ver Code.gs, función include()):
+    - baseUrl:        la URL real de la app.
+    - autores:        la lista completa de autores (ya viene de Code.gs).
+    - autorActual:    cuál está seleccionado ahora mismo (o '' si ninguno).
+    - consultaActual: el texto de búsqueda que había (o '' si no hay).
+-->
+<form class="bd-filtro-autor" method="get" action="<?= baseUrl ?>">
+  <input type="hidden" name="page" value="resultados">
+  <input type="hidden" name="q" value="<?= consultaActual ?>">
+  <label for="filtro-autor">Autor</label>
+  <select id="filtro-autor" name="autor" onchange="this.form.submit()">
+    <option value="">Todos los autores</option>
+    <? for (var i = 0; i < autores.length; i++) { ?>
+      <option value="<?= autores[i] ?>"<?= autores[i] === autorActual ? ' selected' : '' ?>><?= autores[i] ?></option>
+    <? } ?>
+  </select>
+</form>

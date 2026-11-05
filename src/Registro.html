@@ -1,0 +1,93 @@
+<!--
+  Registro.html — formulario para crear una cuenta.
+  Igual que en IniciarSesion.html, todavía no hay base de datos: esta
+  pantalla valida los 4 campos con JavaScript y, si todo está bien, simula
+  que la cuenta se creó y manda a la persona a su Perfil.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <?!= include('TemaOscuro'); ?>
+  <div class="bd-auth-wrap">
+    <div class="bd-card-form wide">
+      <h4>Crear cuenta</h4>
+      <p class="bd-hint">Es opcional — puedes seguir leyendo sin registrarte.</p>
+
+      <div class="bd-field">
+        <label for="nombre">Nombre</label>
+        <input class="bd-input" type="text" id="nombre" placeholder="Tu nombre">
+        <div class="bd-field-error" id="err-nombre">Escribe tu nombre.</div>
+      </div>
+      <div class="bd-field">
+        <label for="correo">Correo electrónico</label>
+        <input class="bd-input" type="email" id="correo" placeholder="tucorreo@ejemplo.com">
+        <div class="bd-field-error" id="err-correo">Escribe un correo válido.</div>
+      </div>
+      <div class="bd-field">
+        <label for="clave">Contraseña</label>
+        <input class="bd-input" type="password" id="clave" placeholder="Mínimo 6 caracteres">
+        <div class="bd-field-error" id="err-clave">La contraseña debe tener al menos 6 caracteres.</div>
+      </div>
+      <div class="bd-field">
+        <label for="clave2">Confirmar contraseña</label>
+        <input class="bd-input" type="password" id="clave2" placeholder="Repite la contraseña">
+        <div class="bd-field-error" id="err-clave2">Las contraseñas no coinciden.</div>
+      </div>
+
+      <button class="bd-enter" id="btn-crear" type="button">Crear cuenta</button>
+      <div class="bd-form-msg" id="msg-ok">Cuenta creada. Redirigiendo a tu perfil…</div>
+
+      <span class="bd-switch">¿Ya tienes cuenta? <a href="<?= baseUrl ?>?page=login">Inicia sesión</a></span>
+      <!-- Registrarse es opcional (ver la portada del proyecto): este enlace lo deja claro y visible. -->
+      <span class="bd-switch"><a href="<?= baseUrl ?>?page=inicio">Seguir sin registrarte</a></span>
+    </div>
+  </div>
+
+  <script>
+    // "baseUrl" viene de Code.gs. La necesitamos aquí porque el botón
+    // "Crear cuenta" redirige por JavaScript, no con un enlace normal de HTML.
+    var baseUrl = '<?= baseUrl ?>';
+
+    // Misma comprobación de forma de correo que en Iniciar sesión.
+    function validarCorreo(valor) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
+    }
+
+    // Se ejecuta al hacer clic en "Crear cuenta".
+    document.getElementById('btn-crear').addEventListener('click', function () {
+      var nombre = document.getElementById('nombre');
+      var correo = document.getElementById('correo');
+      var clave = document.getElementById('clave');
+      var clave2 = document.getElementById('clave2');
+
+      // Reglas de cada campo:
+      var okNombre = nombre.value.trim().length > 0;           // que no esté vacío
+      var okCorreo = validarCorreo(correo.value.trim());        // que tenga forma de correo
+      var okClave = clave.value.length >= 6;                    // mínimo 6 caracteres
+      var okClave2 = clave2.value.length > 0 && clave2.value === clave.value; // igual a la anterior
+
+      // Marcamos en rojo (o quitamos el rojo) cada campo según si pasó su regla.
+      nombre.classList.toggle('invalid', !okNombre);
+      document.getElementById('err-nombre').classList.toggle('show', !okNombre);
+      correo.classList.toggle('invalid', !okCorreo);
+      document.getElementById('err-correo').classList.toggle('show', !okCorreo);
+      clave.classList.toggle('invalid', !okClave);
+      document.getElementById('err-clave').classList.toggle('show', !okClave);
+      clave2.classList.toggle('invalid', !okClave2);
+      document.getElementById('err-clave2').classList.toggle('show', !okClave2);
+
+      // Solo si los 4 campos pasaron, mostramos éxito y mandamos al Perfil.
+      if (okNombre && okCorreo && okClave && okClave2) {
+        document.getElementById('msg-ok').classList.add('ok');
+        setTimeout(function () {
+          window.top.location.href = baseUrl + '?page=perfil';
+        }, 700);
+      }
+    });
+  </script>
+</body>
+</html>

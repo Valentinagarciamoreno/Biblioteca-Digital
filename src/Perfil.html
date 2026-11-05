@@ -1,0 +1,152 @@
+<!--
+  Perfil.html — datos de la cuenta, estadísticas de lectura, un libro
+  destacado en promoción, recomendaciones, tus favoritos, e historial.
+  "historial", "destacado", "recomendados" y "librosResumen" los calcula
+  Code.gs (doGet) y llegan ya listos. La sección "Tus favoritos" es la
+  única que se arma aquí mismo, en el navegador, porque los favoritos
+  viven en localStorage (ver Favoritos.html) y el servidor no los conoce.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <?!= include('TemaOscuro'); ?>
+  <?!= include('HeaderAuth', {baseUrl: baseUrl}); ?>
+
+  <main class="bd-body">
+    <div class="pf-hero">
+      <span class="pf-avatar">V</span>
+      <div>
+        <p class="pf-name">Valentina García</p>
+        <p class="pf-mail">valentina@correo.com</p>
+      </div>
+    </div>
+
+    <div class="pf-stats">
+      <div class="pf-stat"><b>12</b><span>Libros leídos</span></div>
+      <!-- El número de Favoritos ya NO es fijo: lo calcula el JavaScript
+           de abajo (pintarSeccionFavoritos), contando lo que hay guardado
+           en el navegador. Empieza en 0 y se actualiza solo. -->
+      <div class="pf-stat"><b id="stat-favoritos">0</b><span>Favoritos</span></div>
+      <div class="pf-stat"><b>1</b><span>En curso</span></div>
+    </div>
+
+    <!--
+      Banner del libro "destacado". Es publicidad interna (promociona un
+      libro del propio catálogo, no de terceros), pensada para que el
+      Perfil no se sienta solo como una lista de datos.
+    -->
+    <div class="pf-promo">
+      <div>
+        <span class="pf-promo-tag">Destacado de la semana</span>
+        <h4><?= destacado.titulo ?></h4>
+        <p><?= destacado.autor ?> · <?= textoEstrellas(destacado.valoracion) ?></p>
+      </div>
+      <a class="bd-btn" href="<?= baseUrl ?>?page=lector&id=<?= destacado.id ?>">Leer ahora</a>
+    </div>
+
+    <!--
+      Recomendaciones: Code.gs las calculó buscando libros de los mismos
+      autores que ya aparecen en el historial de abajo. Reutilizamos las
+      mismas clases de tarjeta (bd-grid / bd-card) que en Inicio, así que
+      se ven igual de "llamativas" con su propia portada de color, su
+      corazón de favorito y su valoración.
+    -->
+    <h4 class="pf-hist-h">Recomendado para ti</h4>
+    <p class="pf-reco-note">Basado en los libros de tu historial de lectura.</p>
+    <div class="bd-grid cols-3">
+      <? for (var i = 0; i < recomendados.length; i++) { ?>
+        <a class="bd-card" href="<?= baseUrl ?>?page=lector&id=<?= recomendados[i].id ?>">
+          <div class="bd-cover" style="background: linear-gradient(135deg, <?= recomendados[i].colorA ?>, <?= recomendados[i].colorB ?>);">
+            <span class="bd-cover-inicial"><?= recomendados[i].titulo.charAt(0) ?></span>
+            <button class="bd-fav-btn" type="button" data-id="<?= recomendados[i].id ?>" title="Guardar en favoritos" onclick="alternarFavorito(this, event)">♡</button>
+          </div>
+          <p class="bd-title"><?= recomendados[i].titulo ?></p>
+          <p class="bd-author"><?= recomendados[i].autor ?></p>
+          <p class="bd-rating"><?= textoEstrellas(recomendados[i].valoracion) ?></p>
+        </a>
+      <? } ?>
+    </div>
+
+    <!--
+      Tus favoritos: se llena con JavaScript (pintarSeccionFavoritos, más
+      abajo), leyendo los ids guardados en localStorage y buscando sus
+      datos en "catalogoLibros" (viene de librosResumen, calculado en
+      Code.gs). Empieza vacío mientras carga el script.
+    -->
+    <h4 class="pf-hist-h" style="margin-top: 32px;">Tus favoritos</h4>
+    <div class="bd-grid cols-3" id="favoritos-contenedor"></div>
+
+    <h4 class="pf-hist-h" style="margin-top: 32px;">Historial de lectura</h4>
+    <? for (var j = 0; j < historial.length; j++) { ?>
+      <div class="pf-hist-row">
+        <div class="pf-mini-cover" style="background: linear-gradient(135deg, <?= historial[j].libro.colorA ?>, <?= historial[j].libro.colorB ?>);"></div>
+        <span class="pf-hist-title"><?= historial[j].libro.titulo ?></span>
+        <span class="pf-hist-date"><?= historial[j].fecha ?></span>
+      </div>
+    <? } ?>
+
+    <!-- "Cerrar sesión" por ahora solo regresa a Inicio: aún no hay sesión real que cerrar. -->
+    <a class="bd-outline-btn pf-signout" href="<?= baseUrl ?>?page=inicio">Cerrar sesión</a>
+  </main>
+
+  <?!= include('Footer'); ?>
+  <?!= include('Favoritos'); ?>
+
+  <script>
+    // El catálogo liviano (sin el texto de los libros) que arma Code.gs
+    // con resumenLibros(). Lo necesitamos aquí para poder mostrar las
+    // tarjetas de "Tus favoritos": localStorage solo guarda ids de
+    // números, así que hay que buscar el título/autor/color de cada uno
+    // en este catálogo.
+    var catalogoLibros = <?!= JSON.stringify(librosResumen) ?>;
+    var baseUrlPerfil = '<?= baseUrl ?>';
+
+    function pintarSeccionFavoritos() {
+      var idsFavoritos = obtenerFavoritos();
+      var contenedor = document.getElementById('favoritos-contenedor');
+
+      var librosFavoritos = catalogoLibros.filter(function (libro) {
+        return idsFavoritos.indexOf(libro.id) !== -1;
+      });
+
+      document.getElementById('stat-favoritos').textContent = librosFavoritos.length;
+
+      if (librosFavoritos.length === 0) {
+        contenedor.innerHTML = '<p class="bd-empty">Todavía no tienes favoritos. Toca el corazón ♡ de un libro para guardarlo aquí.</p>';
+        return;
+      }
+
+      // Armamos las tarjetas a mano con texto (no con las plantillas de
+      // Apps Script, porque esto corre en el navegador, después de que la
+      // página ya se envió). Es el mismo HTML que usan las otras tarjetas.
+      contenedor.innerHTML = librosFavoritos.map(function (libro) {
+        return (
+          '<a class="bd-card" href="' + baseUrlPerfil + '?page=lector&id=' + libro.id + '">' +
+            '<div class="bd-cover" style="background: linear-gradient(135deg,' + libro.colorA + ',' + libro.colorB + ')">' +
+              '<span class="bd-cover-inicial">' + libro.titulo.charAt(0) + '</span>' +
+              '<button class="bd-fav-btn activo" type="button" data-id="' + libro.id + '" title="Quitar de favoritos" onclick="alternarFavorito(this, event)">♥</button>' +
+            '</div>' +
+            '<p class="bd-title">' + libro.titulo + '</p>' +
+            '<p class="bd-author">' + libro.autor + '</p>' +
+            '<p class="bd-rating">' + libro.estrellas + '</p>' +
+          '</a>'
+        );
+      }).join('');
+    }
+
+    // Favoritos.html llama a esta función automáticamente cada vez que se
+    // marca o desmarca un corazón en CUALQUIER parte de esta pantalla
+    // (recomendaciones o la propia sección de favoritos), para que la
+    // lista y el número de arriba se actualicen al instante.
+    function alActualizarFavoritos() {
+      pintarSeccionFavoritos();
+    }
+
+    document.addEventListener('DOMContentLoaded', pintarSeccionFavoritos);
+  </script>
+</body>
+</html>
